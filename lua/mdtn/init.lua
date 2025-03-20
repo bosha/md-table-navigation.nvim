@@ -5,11 +5,15 @@ M.config = {
 	select_on_navigate = false,
 	select_whole_column = false,
 	filetypes = { "markdown" },
+	inside_cell_pattern = "ic",
+	around_cell_pattern = "ac",
 	keybindings = {
 		n_move_forward = "<Tab>",
 		n_move_backward = "<S-Tab>",
 		i_move_forward = "<Tab>",
 		i_move_backward = "<S-Tab>",
+		n_jump_to_cell_start = "[s",
+		n_jump_to_cell_end = "]s",
 	},
 }
 
@@ -153,6 +157,13 @@ M.select_cell = function(whole_cell)
 		return
 	end
 
+	local with_count = vim.v.count1 > 1
+	local is_delete_operator = vim.v.operator == "d"
+	if with_count and not is_delete_operator then
+		vim.api.nvim_echo({ { "Repeat is supported only for delete operator", "WarningMsg" } }, false, {})
+		return
+	end
+
 	local win = vim.api.nvim_get_current_win()
 	local _, curr_col_pos = unpack(vim.api.nvim_win_get_cursor(win))
 	local columns = get_table_columns(line)
@@ -164,6 +175,29 @@ end
 -- selects the text in a cell with leading/trailing spaces
 M.select_around_cell = function()
 	M.select_cell(true)
+end
+
+local function jump_inside_cell(to_end)
+	local line = is_in_table()
+	if not line then
+		return
+	end
+
+	local curr_row_pos, curr_col_pos = unpack(vim.api.nvim_win_get_cursor(0))
+	local columns = get_table_columns(line)
+	local curr_col_num = get_curr_col_num(columns, curr_col_pos)
+	local column = columns[curr_col_num]
+	local jump_to = (to_end and column.text_end_pos) or column.text_start_pos
+
+	vim.fn.cursor(curr_row_pos, jump_to)
+end
+
+M.jump_to_cell_start = function()
+	jump_inside_cell()
+end
+
+M.jump_to_cell_end = function()
+	jump_inside_cell(true)
 end
 
 M.move_forward = function(select_on_nav, select_whole)
@@ -256,8 +290,10 @@ local function disable_for_current_buffer(bufnr)
 	vim.keymap.del("i", M.config.keybindings.i_move_forward, { buffer = bufnr })
 	vim.keymap.del("i", M.config.keybindings.i_move_backward, { buffer = bufnr })
 
-	vim.keymap.del({"o", "x"}, "ac")
-	vim.keymap.del({"o", "x"}, "ic")
+	vim.keymap.del({ "o", "x" }, M.config.around_cell_pattern)
+	vim.keymap.del({ "o", "x" }, M.config.inside_cell_pattern)
+	vim.keymap.del("n", M.config.keybindings.n_jump_to_cell_start)
+	vim.keymap.del("n", M.config.keybindings.n_jump_to_cell_end)
 end
 
 local function setup_keybindings(bufnr)
@@ -282,8 +318,26 @@ local function setup_keybindings(bufnr)
 			M.move_backward()
 		end, { silent = true, buffer = bufnr })
 
-		vim.keymap.set({ "o", "x" }, "ac", M.select_around_cell, { noremap = true, silent = true })
-		vim.keymap.set({ "o", "x" }, "ic", M.select_cell, { noremap = true, silent = true })
+		vim.keymap.set(
+			{ "o", "x" },
+			M.config.around_cell_pattern,
+			M.select_around_cell,
+			{ noremap = true, silent = true }
+		)
+		vim.keymap.set({ "o", "x" }, M.config.inside_cell_pattern, M.select_cell, { noremap = true, silent = true })
+
+		vim.keymap.set(
+			"n",
+			M.config.keybindings.n_jump_to_cell_start,
+			M.jump_to_cell_start,
+			{ noremap = true, silent = true }
+		)
+		vim.keymap.set(
+			"n",
+			M.config.keybindings.n_jump_to_cell_end,
+			M.jump_to_cell_end,
+			{ noremap = true, silent = true }
+		)
 	end
 end
 

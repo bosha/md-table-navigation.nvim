@@ -2,7 +2,7 @@
 
 **Translations**: [Русский (Russian)](README.ru.md) 🇷🇺
 
-The **Markdown Table Navigation (mdtn)** plugin is a Neovim plugin that allows you to navigate through Markdown tables by columns using simple keyboard shortcuts. By default, it uses `<Tab>` and `<S-Tab>` to move forward and backward between columns, respectively. The plugin also supports optional features like selecting cells (with or without leading/trailing spaces) during navigation and provides text objects for manipulating table cells.
+The **Markdown Table Navigation (mdtn)** plugin is a Neovim plugin that allows you to navigate through Markdown tables by columns using simple keyboard shortcuts. By default, it uses `<Tab>` and `<S-Tab>` to move forward and backward between columns, respectively. The plugin also supports optional features like selecting cells (with or without leading/trailing spaces) during navigation, provides text objects for manipulating table cells, and allows jumping to the beginning or end of a cell.
 
 ## Features
 
@@ -11,7 +11,10 @@ The **Markdown Table Navigation (mdtn)** plugin is a Neovim plugin that allows y
 - **Text Objects**:
   - `ac`: Select a cell including leading/trailing spaces.
   - `ic`: Select only the text inside a cell (excluding leading/trailing spaces).
-- **Customizable Keybindings**: Configure your own keybindings for navigation.
+- **Cell Navigation**:
+  - `[c`: Jump to the beginning of the current cell.
+  - `]c`: Jump to the end of the current cell.
+- **Customizable Keybindings**: Configure your own keybindings for navigation and text objects.
 - **Buffer and Global Toggles**: Enable or disable the plugin globally or for specific buffers.
 - **Commands**: Provides commands for manual navigation and toggling plugin behavior.
 
@@ -38,11 +41,15 @@ require("mdtn").setup({
   select_on_navigate = false, -- Select cells when navigating
   select_whole_column = false, -- Select the entire cell (including leading/trailing spaces) when navigating
   filetypes = { "markdown" }, -- Filetypes to enable the plugin for
+  inside_cell_pattern = "ic", -- Text object pattern for selecting inside a cell (excluding spaces)
+  around_cell_pattern = "ac", -- Text object pattern for selecting around a cell (including spaces)
   keybindings = {
     n_move_forward = "<Tab>", -- Normal mode keybinding to move forward
     n_move_backward = "<S-Tab>", -- Normal mode keybinding to move backward
     i_move_forward = "<Tab>", -- Insert mode keybinding to move forward
     i_move_backward = "<S-Tab>", -- Insert mode keybinding to move backward
+    n_jump_to_cell_start = "[c", -- Normal mode keybinding to jump to the beginning of the current cell
+    n_jump_to_cell_end = "]c", -- Normal mode keybinding to jump to the end of the current cell
   },
 })
 ```
@@ -56,6 +63,8 @@ By default, the plugin uses the following keybindings:
 - **Normal Mode**:
   - `<Tab>`: Move to the next column.
   - `<S-Tab>`: Move to the previous column.
+  - `[c`: Jump to the beginning of the current cell.
+  - `]c`: Jump to the end of the current cell.
 - **Insert Mode**:
   - `<Tab>`: Move to the next column.
   - `<S-Tab>`: Move to the previous column.
@@ -68,6 +77,34 @@ The plugin provides the following text objects for manipulating table cells:
   - Example: `dac` to delete a cell including spaces, `yac` to yank a cell including spaces.
 - **`ic`**: Select only the text inside a cell (excluding leading/trailing spaces).
   - Example: `dic` to delete only the text inside a cell, `yic` to yank only the text inside a cell.
+
+#### Supported Actions
+
+The text objects work with the following actions:
+
+- `d`: Delete
+- `y`: Yank
+- `c`: Change
+- `gU`: Convert to uppercase
+- `gu`: Convert to lowercase
+
+Example:
+
+- Convert a cell to uppercase: `gUac`
+- Convert the text inside a cell to lowercase: `guic`
+
+**Note**: Counts before the text object patterns (e.g., `2dac`) are **not supported**.
+
+### Customizing Text Object Patterns
+
+If the default text object patterns (`ac` and `ic`) conflict with other plugins, you can customize them in the configuration:
+
+```lua
+require("mdtn").setup({
+  inside_cell_pattern = "ic", -- Change to your preferred pattern for selecting inside a cell
+  around_cell_pattern = "ac", -- Change to your preferred pattern for selecting around a cell
+})
+```
 
 ### Commands
 
@@ -102,6 +139,11 @@ The plugin provides the following commands for manual navigation and configurati
 1. Open a Markdown file with a table.
 2. Use `<Tab>` to move to the next column and `<S-Tab>` to move to the previous column.
 
+### Jumping to Cell Boundaries
+
+- Jump to the beginning of the current cell: `[c`
+- Jump to the end of the current cell: `]c`
+
 ### Selecting Cells
 
 To select cells while navigating, enable `select_on_navigate` in the configuration:
@@ -125,6 +167,8 @@ require("mdtn").setup({
 })
 ```
 
+Now, when you navigate, the entire cell (including leading/trailing spaces) will be selected. If `select_whole_column` is `false`, only the text content (excluding leading/trailing spaces) will be selected.
+
 ### Using Text Objects
 
 Use the `ac` and `ic` text objects to manipulate table cells:
@@ -141,8 +185,14 @@ Use the `ac` and `ic` text objects to manipulate table cells:
   ```vim
   cic
   ```
-
-Now, when you navigate, the entire cell (including leading/trailing spaces) will be selected. If `select_whole_column` is `false`, only the text content (excluding leading/trailing spaces) will be selected.
+- **Convert a cell to uppercase**:
+  ```vim
+  gUac
+  ```
+- **Convert the text inside a cell to lowercase**:
+  ```vim
+  guic
+  ```
 
 ### Using Commands
 
@@ -167,6 +217,8 @@ require("mdtn").setup({
     n_move_backward = "<C-h>", -- Use Ctrl+h to move backward in normal mode
     i_move_forward = "<C-l>", -- Use Ctrl+l to move forward in insert mode
     i_move_backward = "<C-h>", -- Use Ctrl+h to move backward in insert mode
+    n_jump_to_cell_start = "[c", -- Custom keybinding to jump to the beginning of the current cell
+    n_jump_to_cell_end = "]c", -- Custom keybinding to jump to the end of the current cell
   },
 })
 ```
@@ -175,6 +227,7 @@ require("mdtn").setup({
 
 - **Plugin not working**: Ensure the plugin is enabled globally and for the current buffer. Use `:MDTableNavEnable` or `:MDTableNavBufEnable` to enable it.
 - **Keybindings conflict**: If the default keybindings conflict with other plugins, customize them using the `keybindings` option.
+- **Text object conflicts**: If the `ac` or `ic` patterns conflict with other plugins, customize them using the `inside_cell_pattern` and `around_cell_pattern` options.
 
 ## License
 
