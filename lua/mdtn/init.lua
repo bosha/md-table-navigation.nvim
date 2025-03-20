@@ -208,12 +208,6 @@ M.move_backward = function(select_on_nav, select_whole)
 
 	local curr_col_num = get_curr_col_num(columns, curr_col_pos)
 
-	local in_visual_mode = vim.fn.mode() == "v" and true
-	if not in_visual_mode and curr_col_num > 1 then
-		navigate_col_by_num(line, columns[#columns - 1], select_on_nav, select_whole)
-		return
-	end
-
 	if curr_col_num > 1 then
 		navigate_col_by_num(line, columns[curr_col_num - 1], select_on_nav, select_whole)
 		return
