@@ -1,6 +1,6 @@
 # Markdown Table Navigation Plugin
 
-**Translations**: [Русский (Russian)](README.ru.md)
+**Translations**: [Русский (Russian) 🇷🇺](README.ru.md)
 
 The **Markdown Table Navigation (mdtn)** plugin is a Neovim plugin that allows you to navigate through Markdown tables by columns using simple keyboard shortcuts. By default, it uses `<Tab>` and `<S-Tab>` to move forward and backward between columns, respectively. The plugin also supports optional features like selecting cells (with or without leading/trailing spaces) during navigation.
 
