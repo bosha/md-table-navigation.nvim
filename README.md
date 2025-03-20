@@ -147,8 +147,6 @@ require("mdtn").setup({
 - **Plugin not working**: Ensure the plugin is enabled globally and for the current buffer. Use `:MDTableNavEnable` or `:MDTableNavBufEnable` to enable it.
 - **Keybindings conflict**: If the default keybindings conflict with other plugins, customize them using the `keybindings` option.
 
----
-
 ## License
 
 This plugin is licensed under the MIT License. See the [LICENSE](LICENSE) file for details.
