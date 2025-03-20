@@ -2,12 +2,15 @@
 
 **Translations**: [Русский (Russian)](README.ru.md) 🇷🇺
 
-The **Markdown Table Navigation (mdtn)** plugin is a Neovim plugin that allows you to navigate through Markdown tables by columns using simple keyboard shortcuts. By default, it uses `<Tab>` and `<S-Tab>` to move forward and backward between columns, respectively. The plugin also supports optional features like selecting cells (with or without leading/trailing spaces) during navigation.
+The **Markdown Table Navigation (mdtn)** plugin is a Neovim plugin that allows you to navigate through Markdown tables by columns using simple keyboard shortcuts. By default, it uses `<Tab>` and `<S-Tab>` to move forward and backward between columns, respectively. The plugin also supports optional features like selecting cells (with or without leading/trailing spaces) during navigation and provides text objects for manipulating table cells.
 
 ## Features
 
 - **Column Navigation**: Move between columns in a Markdown table using `<Tab>` and `<S-Tab>`.
 - **Selection Options**: Optionally select cells, including or excluding leading/trailing spaces.
+- **Text Objects**:
+  - `ac`: Select a cell including leading/trailing spaces.
+  - `ic`: Select only the text inside a cell (excluding leading/trailing spaces).
 - **Customizable Keybindings**: Configure your own keybindings for navigation.
 - **Buffer and Global Toggles**: Enable or disable the plugin globally or for specific buffers.
 - **Commands**: Provides commands for manual navigation and toggling plugin behavior.
@@ -56,6 +59,15 @@ By default, the plugin uses the following keybindings:
 - **Insert Mode**:
   - `<Tab>`: Move to the next column.
   - `<S-Tab>`: Move to the previous column.
+
+### Text Objects
+
+The plugin provides the following text objects for manipulating table cells:
+
+- **`ac`**: Select a cell including leading and trailing spaces.
+  - Example: `dac` to delete a cell including spaces, `yac` to yank a cell including spaces.
+- **`ic`**: Select only the text inside a cell (excluding leading/trailing spaces).
+  - Example: `dic` to delete only the text inside a cell, `yic` to yank only the text inside a cell.
 
 ### Commands
 
@@ -112,6 +124,23 @@ require("mdtn").setup({
   select_whole_column = true,
 })
 ```
+
+### Using Text Objects
+
+Use the `ac` and `ic` text objects to manipulate table cells:
+
+- **Delete a cell including spaces**:
+  ```vim
+  dac
+  ```
+- **Yank only the text inside a cell**:
+  ```vim
+  yic
+  ```
+- **Change the text inside a cell**:
+  ```vim
+  cic
+  ```
 
 Now, when you navigate, the entire cell (including leading/trailing spaces) will be selected. If `select_whole_column` is `false`, only the text content (excluding leading/trailing spaces) will be selected.
 

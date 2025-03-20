@@ -144,6 +144,28 @@ local function navigate_col_by_num(line, column, select_on_nav, select_whole)
 	vim.fn.cursor(line, end_pos)
 end
 
+-- function to select text inside a cell with or without leading/trailing spaces
+-- if @whole_cell is not specified (nil) or false, selects only text without
+-- leading/trailing spaces.
+M.select_cell = function(whole_cell)
+	local line = is_in_table()
+	if not line then
+		return
+	end
+
+	local win = vim.api.nvim_get_current_win()
+	local _, curr_col_pos = unpack(vim.api.nvim_win_get_cursor(win))
+	local columns = get_table_columns(line)
+
+	local curr_col_num = get_curr_col_num(columns, curr_col_pos)
+	navigate_col_by_num(line, columns[curr_col_num], true, whole_cell)
+end
+
+-- selects the text in a cell with leading/trailing spaces
+M.select_around_cell = function()
+	M.select_cell(true)
+end
+
 M.move_forward = function(select_on_nav, select_whole)
 	local line = is_in_table()
 	if not line then
@@ -233,6 +255,9 @@ local function disable_for_current_buffer(bufnr)
 	vim.keymap.del({ "n", "v" }, M.config.keybindings.n_move_backward, { buffer = bufnr })
 	vim.keymap.del("i", M.config.keybindings.i_move_forward, { buffer = bufnr })
 	vim.keymap.del("i", M.config.keybindings.i_move_backward, { buffer = bufnr })
+
+	vim.keymap.del({"o", "x"}, "ac")
+	vim.keymap.del({"o", "x"}, "ic")
 end
 
 local function setup_keybindings(bufnr)
@@ -256,6 +281,9 @@ local function setup_keybindings(bufnr)
 		vim.keymap.set("i", M.config.keybindings.i_move_backward, function()
 			M.move_backward()
 		end, { silent = true, buffer = bufnr })
+
+		vim.keymap.set({ "o", "x" }, "ac", M.select_around_cell, { noremap = true, silent = true })
+		vim.keymap.set({ "o", "x" }, "ic", M.select_cell, { noremap = true, silent = true })
 	end
 end
 
