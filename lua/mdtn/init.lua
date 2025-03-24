@@ -12,8 +12,8 @@ M.config = {
 		n_move_backward = "<S-Tab>",
 		i_move_forward = "<Tab>",
 		i_move_backward = "<S-Tab>",
-		n_jump_to_cell_start = "[s",
-		n_jump_to_cell_end = "]s",
+		n_jump_to_cell_start = "[c",
+		n_jump_to_cell_end = "]c",
 	},
 }
 
@@ -284,6 +284,87 @@ local function is_enabled()
 	return vim.b.mdtn_enabled ~= false and vim.g.mdtn_enabled
 end
 
+local function edit_markdown_cell(line_num, start_col, end_col)
+	-- Get the current buffer
+	local buf = vim.api.nvim_win_get_buf(0)
+
+	-- Get the line containing the markdown row
+	local line = vim.api.nvim_buf_get_lines(buf, line_num - 1, line_num, false)[1]
+
+	-- Extract the cell content within the boundaries
+	local cell_text = string.sub(line, start_col, end_col)
+
+	-- Replace <br> tags with two newlines
+	cell_text = cell_text:gsub("<br>", "\n\n")
+
+	-- Create a new buffer for the popup
+	local popup_buf = vim.api.nvim_create_buf(false, true)
+	vim.api.nvim_buf_set_lines(popup_buf, 0, -1, false, vim.split(cell_text, "\n"))
+
+	-- Create a floating window for the popup
+	local width = 80
+	local height = 10
+	local opts = {
+		relative = "cursor",
+		width = width,
+		height = height,
+		col = 0,
+		row = 1,
+		style = "minimal",
+		border = "single",
+	}
+	local popup_win = vim.api.nvim_open_win(popup_buf, true, opts)
+
+	-- Function to update the cell content
+	local function update_cell_content()
+		-- Get the new content from the popup buffer
+		local new_lines = vim.api.nvim_buf_get_lines(popup_buf, 0, -1, false)
+		local new_text = table.concat(new_lines, "\n")
+
+		-- Replace empty lines with <br> tags
+		new_text = new_text:gsub("%s*\n%s*", "<br>")
+
+		-- Replace the old cell content with the new content
+		local new_line = string.sub(line, 1, start_col - 1) .. new_text .. string.sub(line, end_col + 1, -1)
+
+		-- Update the buffer with the new line
+		vim.api.nvim_buf_set_lines(buf, line_num - 1, line_num, false, { new_line })
+
+		-- Close the popup buffer
+		vim.api.nvim_win_close(popup_win, true)
+	end
+
+	-- Set keymaps for closing the popup
+	vim.api.nvim_buf_set_keymap(
+		popup_buf,
+		"n",
+		"<C-c>",
+		"",
+		{ noremap = true, silent = true, callback = update_cell_content }
+	)
+	vim.api.nvim_buf_set_keymap(
+		popup_buf,
+		"n",
+		"q",
+		"",
+		{ noremap = true, silent = true, callback = update_cell_content }
+	)
+end
+
+M.edit_cell_in_popup = function()
+	local line = is_in_table()
+	if not line then
+		return
+	end
+
+	local columns = get_table_columns(line)
+	local curr_line_pos, curr_col_pos = unpack(vim.api.nvim_win_get_cursor(0))
+	local curr_col_num = get_curr_col_num(columns, curr_col_pos)
+	local column = columns[curr_col_num]
+
+	edit_markdown_cell(curr_line_pos, column.text_start_pos, column.text_end_pos)
+end
+
 local function disable_for_current_buffer(bufnr)
 	vim.keymap.del({ "n", "v" }, M.config.keybindings.n_move_forward, { buffer = bufnr })
 	vim.keymap.del({ "n", "v" }, M.config.keybindings.n_move_backward, { buffer = bufnr })
@@ -338,6 +419,8 @@ local function setup_keybindings(bufnr)
 			M.jump_to_cell_end,
 			{ noremap = true, silent = true }
 		)
+
+		vim.keymap.set("n", "<leader>te", M.edit_cell_in_popup, { noremap = true, silent = true })
 	end
 end
 
